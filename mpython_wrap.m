@@ -1,18 +1,21 @@
-function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, ispackage, istoplevel, isclass, isprivate, clsname)
+function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrite, ispackage, istoplevel, isclass, isprivate, clsname)
     global PKGNAME; 
     if nargin < 4
-        ispackage = true;
+        overwrite = false; 
     end
     if nargin < 5
-        istoplevel = ispackage;
+        ispackage = true;
     end
     if nargin < 6
-        isclass = false; 
+        istoplevel = ispackage;
     end
     if nargin < 7
-        isprivate = false; 
+        isclass = false; 
     end
     if nargin < 8
+        isprivate = false; 
+    end
+    if nargin < 9
         clsname = '';
     end
 
@@ -56,8 +59,11 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, ispackag
     end
 
     % get hashmap
-    hashmap = mpython_get_hashmap(opath); 
-
+    if overwrite
+        hashmap = struct;
+    else
+        hashmap = mpython_get_hashmap(opath); 
+    end
 
     fnstr = []; 
 
@@ -96,7 +102,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, ispackag
                     [~, hash] = mpython_check_hash(hashmap, [classname '_' classname], fullfile(classpath, [classname '.m']));
                     hashmap = mpython_update_hash(hashmap, [classname '_' classname], hash); 
 
-                    [pystr, ~, innerhashmap] = mpython_wrap(classpath, opath, file.name, false, false, true, false, classname); 
+                    [pystr, ~, innerhashmap] = mpython_wrap(classpath, opath, file.name, overwrite, false, false, true, false, classname); 
                     pystr = [hdrstr pystr]; 
                     
                     hashmap = mpython_merge_hashmaps(hashmap, innerhashmap); 
@@ -106,11 +112,11 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, ispackag
                 initstr = [initstr 'from .' classname ' import ' classname newline]; 
                 
             elseif ~isempty(regexp(file.name, '^+', 'match'))
-                mpython_wrap(fullfile(path, file.name), opath, file.name, true, false, false, isprivate);
+                mpython_wrap(fullfile(path, file.name), opath, file.name, overwrite, true, false, false, isprivate);
                 initstr = [initstr 'import .' file.name newline]; 
 
             elseif isempty(regexp(fullfile(path, file.name), ['.*?_' PKGNAME], 'match'))
-                [~, initstr_pr, innerhashmap] = mpython_wrap(fullfile(path, file.name), opath, ['__' file.name], false, false, isclass, isprivate | strcmp(file.name, 'private'), clsname);
+                [~, initstr_pr, innerhashmap] = mpython_wrap(fullfile(path, file.name), opath, ['__' file.name], overwrite, false, false, isclass, isprivate | strcmp(file.name, 'private'), clsname);
                 if isempty(initstr_pr)
                     continue
                 elseif isprivate | strcmp(file.name, 'private')
@@ -194,7 +200,7 @@ function pystr = mpython_wrap_function(file, ismethod, pyfname)
             template = [...
               '  def __init__(self, *args, _objdict=None, **kwargs):' newline...
               '    """<doc>' newline newline...
-              '  [Link to the Matlab implementation.](https://github.com/spm/spm/blob/main/<file>)' newline...
+              '    [Link to the Matlab implementation.]( https://github.com/spm/spm/blob/main/<file> )' newline...
               '    """' newline newline...
               '    if _objdict is None:' newline ...
               '      _objdict = Runtime.call("<fname>", *args, **kwargs)' newline...
@@ -204,24 +210,24 @@ function pystr = mpython_wrap_function(file, ismethod, pyfname)
             template = [...
               '  def <pyfname>(self, *args, **kwargs):' newline...
               '    """<doc>' newline newline...
-              '  [Link to the Matlab implementation.](https://github.com/spm/spm/blob/main/<file>)' newline...
+              '    [Link to the Matlab implementation.]( https://github.com/spm/spm/blob/main/<file> )' newline...
               '    """' newline newline...
-              '    return Runtime.call("<fname>", self._as_matlab_object(), *args, **kwargs)' newline newline...
+              '    return Runtime.call("<fname>", self._as_matlab_object(), *args, **kwargs<nargout>)' newline newline...
             ];
         end
-        if strcmp(pyfname, 'display') % map display onto Python __repr__
-            template = [template... 
-              '  __repr__ = display # Use display to represent objects' ...
-              newline newline...
-            ];
-        end
+        % if strcmp(pyfname, 'display') % map display onto Python __repr__
+        %     template = [template... 
+        %       '  __repr__ = display # Use display to represent objects' ...
+        %       newline newline...
+        %     ];
+        % end
     else 
         global PKGNAME; 
         template = [...
           'from ' PKGNAME '.__wrapper__ import Runtime' newline newline newline...
           'def <pyfname>(*args, **kwargs):' newline...
           '  """<doc>' newline newline...
-          '  [Link to the Matlab implementation.](https://github.com/spm/spm/blob/main/<file>)' newline...
+          '  [Link to the Matlab implementation.]( https://github.com/spm/spm/blob/main/<file> )' newline...
           '  """' newline newline...
           '  return Runtime.call("<fname>", *args, **kwargs<nargout>)' newline...
         ];
@@ -236,7 +242,6 @@ function pystr = mpython_wrap_function(file, ismethod, pyfname)
     swapcase = @(c)  char(bitxor(double(c), 32));
     
     str = fileread(file); 
-    % rgx = '^function\s*(\[?(?<argout>[\w,\s]+)\]?\s*?=\s*?)?(?<fname>\w+)\s*?(\(\s*(?<argin>.*?)?\s*\))?';
     rgx = '^function\s*(?<argout>\[?[\w,\s]+\]?\s*=\s*)?(?<fname>\w+)\s*(?<argin>\([\w,\s]*?\))?';
 
     fun = []; 

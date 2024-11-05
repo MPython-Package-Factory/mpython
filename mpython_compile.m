@@ -53,6 +53,4 @@ function mpython_compile(ipath, opath, pkgname, toolboxes, includes)
         rmdir(fullfile(opath, pkgname, ['_' pkgname]))
     end
     copyfile(fullfile(builddir, ['_' pkgname]), fullfile(opath, pkgname, ['_' pkgname]), "f"); 
-    
-    mpython_wrap(ipath, opath, pkgname);
 end
