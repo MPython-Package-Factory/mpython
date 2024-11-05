@@ -1,3 +1,3 @@
 def <pyfname>(<self>*args, **kwargs):
-	<docstring>
+    <docstring>
     return Runtime.call("<fname>", *args, **kwargs<nargout>)
