@@ -27,11 +27,6 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
 
     % top level folder 
     if istoplevel
-        % create opath/
-        if ~exist(opath, 'dir')
-            mkdir(opath)
-        end
-        % create opath/setup.py
 
         clear global PKGNAME ;
         global PKGNAME; 
@@ -40,6 +35,16 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         clear global TEMPLATES; 
         global TEMPLATES; 
         TEMPLATES = mpython_load_templates(templatedir);
+
+        % create opath/
+        if ~exist(opath, 'dir')
+            mkdir(opath)
+        end
+
+        % create opath/setup.py
+        if ~exist(fullfile(opath, 'setup.py', 'file'))
+            mpython_create_setup(opath);
+        end
 
         fprintf('Wrapping %s... \n', PKGNAME); 
 
@@ -111,8 +116,14 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
 
                     [pystr, ~, innerhashmap] = mpython_wrap(classpath, opath, file.name, overwrite, templatedir, false, false, true, false, classname); 
                     pystr = [hdrstr pystr]; 
-                    
-                    hashmap = mpython_merge_hashmaps(hashmap, innerhashmap); 
+                    hashmap = mpython_merge_hashmaps(hashmap, innerhashmap);
+
+                    try 
+                        [pystr, ~, innerhashmap] = mpython_wrap(fullfile(classpath, 'private'), opath, file.name, overwrite, templatedir, false, false, true, true, classname); 
+                        pystr = [hdrstr pystr]; 
+                        hashmap = mpython_merge_hashmaps(hashmap, innerhashmap);
+                    end
+
                     writelines(pystr, fullfile(opath, [classname '.py']));
                 end
 
@@ -162,10 +173,9 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
                             writelines(pystr, fullfile(opath, [basename '.py']));
                         end 
                     catch 
-                        warning(['Could not wrap file %s' filesep '%s'], path, file.name); 
-                        ignored = true;
                         err = lasterror;
-                        warning('Details: \n%s', err.message); 
+                        warning(['Could not wrap file %s' filesep '%s\nDetails: %s'], path, file.name, err.message); 
+                        ignored = true;
                     end
 
                     if isclass
@@ -193,6 +203,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         end
 
         if ~isempty(initstr) 
+            initstr = mpython_repl('init', 'imports', initstr); 
             writelines(initstr, fullfile(opath, '__init__.py'));
         end
     end    
@@ -280,6 +291,12 @@ function mpython_create_wrapper(path)
     global TEMPLATES
 
     writelines(TEMPLATES.wrapper, fullfile(path, '__wrapper__.py'))
+end
+
+function mpython_create_setup(path)
+    global TEMPLATES
+
+    writelines(TEMPLATES.setup, fullfile(path, '..', 'setup.py'))
 end
 
 function repl = mpython_repl(attr, varargin)
