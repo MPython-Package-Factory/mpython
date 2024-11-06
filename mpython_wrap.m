@@ -39,7 +39,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         clear global ROOTPATH; 
         global ROOTPATH; 
         path = getfield(dir(path), 'folder');
-        ROOTPATH = getfield(dir(path), 'folder'); 
+        ROOTPATH = path; 
 
         % create opath/
         if ~exist(opath, 'dir')
