@@ -314,6 +314,9 @@ function repl = mpython_repl(attr, varargin)
 
             sub.matlabhelp = doc; 
             
+            rfilepath = strrep(args.file, [ROOTPATH filesep], ''); 
+            sub.rfilepath = rfilepath; 
+        
         otherwise 
             sub = args; 
     end 
