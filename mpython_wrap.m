@@ -300,7 +300,7 @@ function mpython_create_setup(path)
 end
 
 function repl = mpython_repl(attr, varargin)
-    global TEMPLATES 
+    global TEMPLATES ROOTPATH
 
     sub = struct;
     args = struct(varargin{:}); 
