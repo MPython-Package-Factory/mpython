@@ -1,9 +1,9 @@
 function mpython_compile(ipath, opath, pkgname, toolboxes, includes)
     if nargin < 3
         [~, pkgname] = fileparts(ipath);
-        pkgname = strrep(pkgname, '.', '_'); 
-        pkgname = strrep(pkgname, '-', '_'); 
     end
+    pkgname = strrep(pkgname, '.', '_'); 
+    pkgname = strrep(pkgname, '-', '_'); 
 
     if nargin < 4
         toolboxes = {};
@@ -29,16 +29,15 @@ function mpython_compile(ipath, opath, pkgname, toolboxes, includes)
         end
     end
 
-
-    opath = getfield(dir(opath), 'folder'); 
-    builddir = fullfile(opath, 'build');
-
-    try
-        rmdir(builddir)
-    end
     if ~exist(opath, 'dir')
         mkdir(opath); 
     end
+    try
+        rmdir(builddir)
+    end
+    
+    opath = getfield(dir(opath), 'folder'); 
+    builddir = fullfile(opath, 'build');
 
     mcc('-v',...
         '-W',['python:_' pkgname],...
@@ -52,5 +51,6 @@ function mpython_compile(ipath, opath, pkgname, toolboxes, includes)
     try
         rmdir(fullfile(opath, pkgname, ['_' pkgname]))
     end
-    copyfile(fullfile(builddir, ['_' pkgname]), fullfile(opath, pkgname, ['_' pkgname]), "f"); 
+    copyfile(fullfile(builddir, ['_' pkgname], '*'), fullfile(opath, pkgname, ['_' pkgname]), "f"); 
+
 end
