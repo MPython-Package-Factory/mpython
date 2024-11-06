@@ -36,6 +36,11 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         global TEMPLATES; 
         TEMPLATES = mpython_load_templates(templatedir);
 
+        clear global ROOTPATH; 
+        global ROOTPATH; 
+        path = getfield(dir(path), 'folder');
+        ROOTPATH = getfield(dir(path), 'folder'); 
+
         % create opath/
         if ~exist(opath, 'dir')
             mkdir(opath)
@@ -300,7 +305,7 @@ function mpython_create_setup(path)
 end
 
 function repl = mpython_repl(attr, varargin)
-    global TEMPLATES 
+    global TEMPLATES ROOTPATH
 
     sub = struct;
     args = struct(varargin{:}); 
