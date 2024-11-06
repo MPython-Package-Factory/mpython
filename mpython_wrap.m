@@ -36,6 +36,10 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         global TEMPLATES; 
         TEMPLATES = mpython_load_templates(templatedir);
 
+        clear global ROOTPATH; 
+        global ROOTPATH; 
+        ROOTPATH = getfield(dir(path), 'folder'); 
+
         % create opath/
         if ~exist(opath, 'dir')
             mkdir(opath)
@@ -119,8 +123,8 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
                     hashmap = mpython_merge_hashmaps(hashmap, innerhashmap);
 
                     try 
-                        [pystr, ~, innerhashmap] = mpython_wrap(fullfile(classpath, 'private'), opath, file.name, overwrite, templatedir, false, false, true, true, classname); 
-                        pystr = [hdrstr pystr]; 
+                        [str, ~, innerhashmap] = mpython_wrap(fullfile(classpath, 'private'), opath, file.name, overwrite, templatedir, false, false, true, true, classname); 
+                        pystr = [pystr str]; 
                         hashmap = mpython_merge_hashmaps(hashmap, innerhashmap);
                     end
 
@@ -300,7 +304,7 @@ function mpython_create_setup(path)
 end
 
 function repl = mpython_repl(attr, varargin)
-    global TEMPLATES 
+    global TEMPLATES ROOTPATH
 
     sub = struct;
     args = struct(varargin{:}); 
@@ -309,10 +313,14 @@ function repl = mpython_repl(attr, varargin)
 
     switch attr
         case 'docstring'
+
             doc = help(args.file); 
             doc = strrep(doc, newline, sprintf('  \n  '));
 
             sub.matlabhelp = doc; 
+            
+            rfilepath = strrep(args.file, [ROOTPATH filesep], ''); 
+            sub.rfilepath = rfilepath; 
             
         otherwise 
             sub = args; 
