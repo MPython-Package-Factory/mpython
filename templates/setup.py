@@ -16,7 +16,7 @@ setup(
     packages=find_packages(),  
     include_package_data=True, 
     package_data={
-        '<pkgname>': ['_<pkgname>/_<pkgname>.ctf'], 
+        '<pkgname>': ['_<pkgname>/**/*'], 
     },
     classifiers=[
         'Programming Language :: Python :: 3',
