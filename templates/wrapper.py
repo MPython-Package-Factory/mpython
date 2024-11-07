@@ -1,4 +1,16 @@
-from <pkgname>._<pkgname> import initialize
+try:
+	from <pkgname>._<pkgname> import initialize
+except ImportError as e:
+	import os
+	installer_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 
+        '_<pkgname>', 
+        'resources',
+        'RuntimeInstaller.install')
+
+	print("Failed to import, install Matlab Runtime and setup library path. ")
+	print(f"Matlab Runtime installer can be found in: {installer_path}")
+	raise e
 
 
 class MatlabClassWrapper:

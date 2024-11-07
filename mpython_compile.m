@@ -4,6 +4,8 @@ function mpython_compile(ipath, opath, pkgname, toolboxes, includes)
     end
     pkgname = strrep(pkgname, '.', '_'); 
     pkgname = strrep(pkgname, '-', '_'); 
+    runtime_installer_name = 'RuntimeInstaller';
+
 
     if nargin < 4
         toolboxes = {};
@@ -47,10 +49,17 @@ function mpython_compile(ipath, opath, pkgname, toolboxes, includes)
         pathargs{:}, ...
         'mpython_endpoint'... 
     );
-
+    
+    innerpath = fullfile(opath, pkgname, ['_' pkgname]);
     try
-        rmdir(fullfile(opath, pkgname, ['_' pkgname]))
+        rmdir(innerpath)
     end
-    copyfile(fullfile(builddir, ['_' pkgname], '*'), fullfile(opath, pkgname, ['_' pkgname]), "f"); 
-
+    copyfile(fullfile(builddir, ['_' pkgname], '*'), fullfile(innerpath), "f"); 
+    
+    compiler.runtime.customInstaller( ...
+        runtime_installer_name, ...
+        fullfile(builddir, 'requiredMCRProducts.txt'), ...
+        "OutputDir", ...
+        fullfile(innerpath, 'resources') ...
+    );
 end
