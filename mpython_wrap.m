@@ -226,7 +226,7 @@ function pystr = mpython_wrap_function(file, ismethod, pyfname)
     % Extract function signature
     rgx = '^function\s*(?<argout>\[?[\w,\s]+\]?\s*=\s*)?(?<fname>\w+)\s*(?<argin>\([\w,\s]*?\))?';
     
-    fun = regexp(str, rgx,'names');
+    fun = regexp(str, rgx, 'names', 'once');
     if isempty(fun)
         error('No function in %s.', file); 
     end
@@ -341,7 +341,7 @@ function repl = mpython_repl(attr, varargin)
             end
         end
         
-        repl = regexprep(repl, tag, str); 
+        repl = strrep(repl, tag, str); 
     end
 end
 
