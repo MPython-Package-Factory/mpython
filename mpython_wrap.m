@@ -124,8 +124,8 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
                     hashmap = mpython_merge_hashmaps(hashmap, innerhashmap);
 
                     try 
-                        [pystr, ~, innerhashmap] = mpython_wrap(fullfile(classpath, 'private'), opath, file.name, overwrite, templatedir, false, false, true, true, classname); 
-                        pystr = [hdrstr pystr]; 
+                        [innerpystr, ~, innerhashmap] = mpython_wrap(fullfile(classpath, 'private'), opath, file.name, overwrite, templatedir, false, false, true, true, classname); 
+                        pystr = [pystr innerpystr]; 
                         hashmap = mpython_merge_hashmaps(hashmap, innerhashmap);
                     end
 
@@ -247,9 +247,11 @@ function pystr = mpython_wrap_function(file, ismethod, pyfname)
     
     % Prepend self to methods arguments
     if ismethod
-        selfstr  = 'self, ';
+        selfargstr  = 'self, ';
+        selfcallstr = 'self._as_matlab_object(), '; 
     else 
-        selfstr = ''; 
+        selfargstr = ''; 
+        selfcallstr = ''; 
     end
     
     % Fill in docstring
@@ -262,7 +264,9 @@ function pystr = mpython_wrap_function(file, ismethod, pyfname)
         'pyfname', pyfname, ...
         'file', file, ...
         'nargout', nargoutstr, ...
-        'self', selfstr); 
+        'selfarg', selfargstr, ...
+        'selfcall', selfcallstr ...
+    ); 
 
     if ismethod
         % Indent methods
@@ -320,6 +324,7 @@ function repl = mpython_repl(attr, varargin)
             sub.matlabhelp = doc; 
             
             rfilepath = strrep(args.file, [ROOTPATH filesep], ''); 
+            rfilepath = strrep(rfilepath, filesep, '/');
             sub.rfilepath = rfilepath; 
         
         otherwise 
