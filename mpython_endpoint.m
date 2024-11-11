@@ -35,12 +35,18 @@ function varargout = check_argin(varargin)
         % Dive in cell and struct
         if iscell(S) 
             for j = 1:numel(S)
-                S{i} = check_argin(S{i});
+                S{j} = check_argin(S{j});
             end
         elseif isstruct(S)
-            fn = fieldnames(S); 
-            for j = 1:numel(fn)
-                S.(fn{j}) = check_argin(S.(fn{j}));
+            if isscalar(S) % Scalar structure
+                fn = fieldnames(S); 
+                for j = 1:numel(fn)
+                    S.(fn{j}) = check_argin(S.(fn{j}));
+                end
+            else
+                for j = 1:numel(S)
+                    S(j) = check_argin(S(j));
+                end
             end
         end 
 
@@ -143,22 +149,18 @@ function varargout = check_argout(varargin)
                 assert(numel(s) == length(s)); 
             case 'struct'
                 assert(isscalar(s)); 
-            case 'double'
-                assert(~issparse(s));
-                assert(isscalar(s) || isreal(s));
-            case 'int'
-                assert(~issparse(s)); 
-                assert(isscalar(s) || isreal(s));
-            case 'uint32'
-                assert(~issparse(s)); 
-                assert(isscalar(s) || isreal(s));
             case 'logical'
             case 'string'
-                assert(isscalar(s))
+                assert(isscalar(s));
             case 'datetime'
-                assert(isscalar(s))
+                assert(isscalar(s));
             otherwise
-                fprintf('%s\n', class(s))
+                if isnumeric(s)
+                    assert(~issparse(s)); 
+                    assert(isscalar(s) || isreal(s));
+                else
+                    fprintf('%s\n', class(s));
+                end
         end
         % 5. categorical types
         % 6. containers.Map types
