@@ -17,30 +17,23 @@ import warnings
 class MatlabClassWrapper:
 	_subclasses = dict()
 
-	def __init__(self, _objdict):
-		self._objdict = _objdict
-
-	def __new__(cls, *args, _objdict=None, **kwargs):
-		if _objdict is None:
-			obj = Runtime.call(cls.__name__, *args, **kwargs)
-		else:
-			obj = super().__new__(cls)
-			obj.__init__(_objdict)
-		return obj
-
-	@classmethod
-	def _from_matlab_object(cls, res):
-		return cls(_objdict=res)
-
-	def _as_matlab_object(self): 
+	def _as_matlab_object(self):
 		return self._objdict
 
 	def __init_subclass__(cls):
 		super().__init_subclass__()
 		MatlabClassWrapper._subclasses[cls.__name__] = cls
-		if hasattr(cls, 'display'):
-			cls.__repr__ = cls.display
 
+	def __new__(cls, *args, _objdict=None, **kwargs):
+		if _objdict is None:
+			if cls.__name__ in MatlabClassWrapper._subclasses.keys():
+				obj = Runtime.call(cls.__name__, *args, **kwargs)
+			else:
+				obj = super().__new__(cls)
+		else:
+			obj = super().__new__(cls)
+			obj._objdict = _objdict
+		return obj
 
 
 class Runtime:
@@ -93,10 +86,10 @@ class Runtime:
 			if 'type__' in res.keys():
 				if res['type__'] == 'object':
 					if res['class__'] in MatlabClassWrapper._subclasses.keys():
-						out = MatlabClassWrapper._subclasses[res['class__']]._from_matlab_object(res)
+						out = MatlabClassWrapper._subclasses[res['class__']](_objdict=res)
 					else:
 						warnings.warn(f'Unknown Matlab class type: {res["type__"]}')
-						out = MatlabClassWrapper._from_matlab_object(res)
+						out = MatlabClassWrapper(_objdict=res)
 				else:
 					out = res
 			else:
