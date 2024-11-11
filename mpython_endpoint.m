@@ -169,8 +169,8 @@ function varargout = check_argout(varargin)
         % dive in
         if iscell(s) 
             for j = 1:numel(s)
-                if ~isempty(s{i})
-                    s{i} = check_argout(s{i});
+                if ~isempty(s{j})
+                    s{j} = check_argout(s{j});
                 end
             end
         elseif isstruct(s) 
