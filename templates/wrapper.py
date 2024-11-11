@@ -11,6 +11,7 @@ except ImportError as e:
 	print("Failed to import, install Matlab Runtime and setup library path. ")
 	print(f"Matlab Runtime installer can be found in: {installer_path}")
 	raise e
+import warnings
 
 
 class MatlabClassWrapper:
@@ -18,6 +19,14 @@ class MatlabClassWrapper:
 
 	def __init__(self, _objdict):
 		self._objdict = _objdict
+
+	def __new__(cls, *args, _objdict=None, **kwargs):
+		if _objdict is None:
+			obj = Runtime.call(cls.__name__, *args, **kwargs)
+		else:
+			obj = super().__new__(cls)
+			obj.__init__(_objdict)
+		return obj
 
 	@classmethod
 	def _from_matlab_object(cls, res):
@@ -31,6 +40,7 @@ class MatlabClassWrapper:
 		MatlabClassWrapper._subclasses[cls.__name__] = cls
 		if hasattr(cls, 'display'):
 			cls.__repr__ = cls.display
+
 
 
 class Runtime:
@@ -74,14 +84,23 @@ class Runtime:
 	@staticmethod
 	def _process_argout(res):
 		out = res
-		if isinstance(res, tuple): 
+		if isinstance(res, tuple):
 			out = tuple(Runtime._process_argout(r) for r in res)
-		else:
-			if isinstance(res, dict): 
-				if 'type__' in res.keys(): 
-					if res['type__'] == 'object' and res['class__'] in MatlabClassWrapper._subclasses.keys(): 
+		elif isinstance(res, list):
+			out = list(Runtime._process_argout(r) for r in res)
+		elif isinstance(res, dict):
+			res = dict(zip(res.keys(), map(Runtime._process_argout, res.values())))
+			if 'type__' in res.keys():
+				if res['type__'] == 'object':
+					if res['class__'] in MatlabClassWrapper._subclasses.keys():
 						out = MatlabClassWrapper._subclasses[res['class__']]._from_matlab_object(res)
-
+					else:
+						warnings.warn(f'Unknown Matlab class type: {res["type__"]}')
+						out = MatlabClassWrapper._from_matlab_object(res)
+				else:
+					out = res
+			else:
+				out = Struct(**res)
 		return out
 
 
