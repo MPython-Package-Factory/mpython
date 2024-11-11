@@ -57,8 +57,8 @@ class Runtime:
 	@staticmethod
 	def _cast_argin(arg):
 		if isinstance(arg, MatlabClassWrapper): 
-				arg = arg._as_matlab_object()
-		elif isinstance(arg, dict):
+			arg = arg._as_matlab_object()
+		if isinstance(arg, dict):
 			_, arg = Runtime._process_argin(**arg)
 		elif isinstance(arg, (tuple, dict, list, set)):
 			arg, _ = Runtime._process_argin(*arg)
