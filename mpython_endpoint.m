@@ -6,7 +6,9 @@ function [varargout] = mpython_endpoint(F, varargin)
 % This function is the endpoint used to call any function from Python. Its
 % role is to convert arguments in and out into objects that are supported
 % by the Matlab Runtime Engine in Python. 
-    varargout = cell(1, nargout); 
+    nargsF = evalin('base', sprintf("nargout('%s')", F));
+    nargout_  = min(nargsF, nargout); 
+    varargout = cell(1, nargout_); 
 
     if nargin > 0
         [varargin{:}]  = check_argin(varargin{:});
@@ -18,7 +20,7 @@ function [varargout] = mpython_endpoint(F, varargin)
         [varargout{:}] = feval(F, varargin{:}); 
     end
 
-    if nargout > 0
+    if nargout_ > 0
         [varargout{:}] = check_argout(varargout{:}); 
     end
 end
@@ -26,7 +28,6 @@ end
 function varargout = check_argin(varargin)
     % Converts arguments from Matlab Runtime compatible types to generic
     % Matlab types. 
-
     varargout = cell(1, nargout); 
 
     for i = 1:numel(varargout)
