@@ -171,7 +171,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
                     fprintf('Processing %s\n', fullfile(path, file.name))
                     ignored = false; 
                     try 
-                        pystr = mpython_wrap_function(fullfile(path, file.name), isclass, basename);
+                        [pystr, pyfname] = mpython_wrap_function(fullfile(path, file.name), isclass, basename);
                         if isclass
                             fnstr = [fnstr, pystr]; 
                         else
@@ -179,7 +179,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
                         end 
                     catch 
                         err = lasterror;
-                        warning(['Could not wrap file %s' filesep '%s\nDetails: %s'], path, file.name, err.message); 
+                        warning(['Could not wrap file %s' filesep '%s \nDetails: %s'], path, file.name, err.message); 
                         ignored = true;
                     end
 
@@ -191,7 +191,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
                 end
                 
                 if ~isclass && ~ignored
-                    initstr = [initstr 'from .' basename ' import ' basename newline]; 
+                    initstr = [initstr 'from .' basename ' import ' pyfname newline]; 
                 end
             end
         end
@@ -219,7 +219,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
 end
 
 
-function pystr = mpython_wrap_function(file, ismethod, pyfname)
+function [pystr, pyfname] = mpython_wrap_function(file, ismethod, pyfname)
     % Read function code
     str = fileread(file); 
 
@@ -232,6 +232,25 @@ function pystr = mpython_wrap_function(file, ismethod, pyfname)
     end
     if nargin < 3
         pyfname = fun.fname;
+    end
+
+    python_builtin = {
+        '__import__'; 'abs'; 'aiter'; 'all'; 'anext'; 'any'; 'ascii'; 
+        'as'; 'assert'; 'async'; 'await'; 'bin'; 'bool'; 'break'; 'breakpoint'; 
+        'bytes'; 'bytearray'; 'callable'; 'chr'; 'class'; 'classmethod'; 'compile'; 
+        'complex'; 'continue'; 'def'; 'del'; 'delattr'; 'dict'; 'dir'; 'divmod'; 
+        'elif'; 'else'; 'enumerate'; 'eval'; 'exec'; 'except'; 'filter'; 'finally'; 
+        'float'; 'for'; 'format'; 'frozenset'; 'from'; 'getattr'; 'global'; 'globals'; 
+        'hasattr'; 'hash'; 'help'; 'hex'; 'if'; 'import'; 'in'; 'input'; 'int'; 
+        'is'; 'isinstance'; 'issubclass'; 'iter'; 'lambda'; 'len'; 'list'; 'locals'; 
+        'map'; 'max'; 'memoryview'; 'min'; 'nonlocal'; 'next'; 'not'; 'object'; 'oct'; 
+        'open'; 'ord'; 'pass'; 'pow'; 'print'; 'property'; 'raise'; 'range'; 'repr'; 
+        'reversed'; 'return'; 'round'; 'set'; 'setattr'; 'slice'; 'sorted'; 'staticmethod'; 
+        'str'; 'sum'; 'super'; 'try'; 'tuple'; 'type'; 'vars'; 'while'; 'with'; 'yield'
+    };
+
+    if ~ismethod && any(strcmp(pyfname, python_builtin))
+        pyfname = sprintf('%s_', pyfname);
     end
 
     % Check for output arguments
