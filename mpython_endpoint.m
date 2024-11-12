@@ -112,7 +112,8 @@ function varargout = check_argout(varargin)
             s = struct();
             s.type__ = 'char';
             s.size__ = size(S); 
-            s.data__ = cellstr(S); 
+            s.data__ = reshape(...
+                cellstr(S), 1, []); 
 
         % 2. Sparse arrays
         elseif issparse(S)
@@ -123,7 +124,8 @@ function varargout = check_argout(varargin)
             s = struct();
             s.type__ = 'structarray';
             s.size__ = size(S); 
-            s.data__ = arrayfun(@(o) o, S, 'UniformOutput', false); 
+            s.data__ = reshape(...
+                arrayfun(@(o) o, S, 'UniformOutput', false), 1, []); 
 
         % 3. struct arrays
         elseif (isstruct(S) & numel(S) == 0)
