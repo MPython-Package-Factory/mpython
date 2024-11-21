@@ -54,8 +54,10 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         fprintf('Wrapping %s... \n', PKGNAME); 
 
         % to do: check for differences in the mpython script
+        initstr = ['from .__wrapper__ import Struct, Cell, StructArray, Runtime' newline]; 
     end
-    initstr = []; 
+        initstr = []; 
+    end
 
     if ~isempty(regexp(path, ['.*?_' PKGNAME], 'match'))
         return 
