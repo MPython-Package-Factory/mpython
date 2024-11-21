@@ -7,11 +7,11 @@ except ImportError as e:
         '_spm',
         'resources',
         'RuntimeInstaller.install')
-	print("Failed to import, install Matlab Runtime and setup library path. ")
-	print(f"Matlab Runtime installer can be found in: {installer_path}")
+    print("Failed to import, install Matlab Runtime and setup library path. ")
+    print(f"Matlab Runtime installer can be found in: {installer_path}")
 
-	raise e
-	
+    raise e
+    
 import warnings
 import numpy as np
 import matlab
@@ -211,11 +211,11 @@ class Runtime:
             res = dict(zip(res.keys(), map(Runtime._process_argout, res.values())))
             if 'type__' in res.keys():
                 if res['type__'] == 'object':
-                	out = MatlabClassWrapper._from_matlab_object(res)
+                    out = MatlabClassWrapper._from_matlab_object(res)
                 elif res['type__'] == 'structarray':
                     out = StructArray._from_matlab_object(res)
                 elif res['type__'] == 'sparse':
-                	out = np.asarray(res['data__'], dtype=np.double)
+                    out = np.asarray(res['data__'], dtype=np.double)
                 else:
                     out = res
             else:
