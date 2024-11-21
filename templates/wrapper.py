@@ -36,10 +36,6 @@ class MatlabClassWrapper:
     def _as_matlab_object(self):
         return self._objdict
 
-    def __init_subclass__(cls):
-        super().__init_subclass__()
-        MatlabClassWrapper._subclasses[cls.__name__] = cls
-
     def __new__(cls, *args, _objdict=None, **kwargs):
         if _objdict is None:
             if cls.__name__ in MatlabClassWrapper._subclasses.keys():
