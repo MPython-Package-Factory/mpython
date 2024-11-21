@@ -11,6 +11,7 @@ except ImportError as e:
 	print(f"Matlab Runtime installer can be found in: {installer_path}")
 
 	raise e
+	
 import warnings
 import numpy as np
 import matlab
@@ -57,6 +58,15 @@ class MatlabClassWrapper:
             cls.__setitem__ = MatlabClassWrapper.__setitem
 
         MatlabClassWrapper._subclasses[cls.__name__] = cls
+
+    @staticmethod
+    def _from_matlab_object(objdict):
+        if objdict['class__'] in MatlabClassWrapper._subclasses.keys():
+            obj = MatlabClassWrapper._subclasses[objdict['class__']](_objdict=objdict)
+        else:
+            warnings.warn(f'Unknown Matlab class type: {objdict["class__"]}')
+            obj = MatlabClassWrapper(_objdict=objdict)
+        return obj
 
     def __getattr(self, key):
         try:
@@ -201,14 +211,11 @@ class Runtime:
             res = dict(zip(res.keys(), map(Runtime._process_argout, res.values())))
             if 'type__' in res.keys():
                 if res['type__'] == 'object':
-                    if res['class__'] in MatlabClassWrapper._subclasses.keys():
-                        out = MatlabClassWrapper._subclasses[res['class__']](_objdict=res)
-                    else:
-                        warnings.warn(f'Unknown Matlab class type: {res["type__"]}')
-                        out = MatlabClassWrapper(_objdict=res)
+                	out = MatlabClassWrapper._from_matlab_object(res)
                 elif res['type__'] == 'structarray':
-                    print()
                     out = StructArray._from_matlab_object(res)
+                elif res['type__'] == 'sparse':
+                	out = np.asarray(res['data__'], dtype=np.double)
                 else:
                     out = res
             else:
@@ -243,7 +250,6 @@ class Cell(list):
             self[i] = xi
         else:
             super().__setitem__(index, value)
-
 
 
 class StructArray:
