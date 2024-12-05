@@ -34,8 +34,7 @@ function mpython_compile(ipath, opath, pkgname, toolboxes, includes)
     if ~exist(opath, 'dir')
         mkdir(opath); 
     end
-
-    opath = getfield(dir(opath), 'folder'); 
+    
     builddir = fullfile(opath, 'build');
 
     try
