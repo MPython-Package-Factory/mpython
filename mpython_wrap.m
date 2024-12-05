@@ -55,7 +55,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
 
         % to do: check for differences in the mpython script
         initstr = ['from .__wrapper__ import Struct, Cell, StructArray, Runtime' newline]; 
-    end
+    else
         initstr = []; 
     end
 
@@ -71,7 +71,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         end
     end
 
-    if istoplevel
+    if istoplevel && ~exist(fullfile(opath, 'setup.py'), 'file')
         mpython_create_wrapper(opath);
     end
 
