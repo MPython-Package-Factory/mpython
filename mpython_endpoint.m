@@ -108,7 +108,7 @@ function varargout = check_argout(varargin)
             s.size__ = size(S); 
             s.data__ = reshape(S, 1, []); 
 
-        elseif ischar(S)
+        elseif ischar(S)  & (numel(S) ~= length(S))
             s = struct();
             s.type__ = 'char';
             s.size__ = size(S); 
