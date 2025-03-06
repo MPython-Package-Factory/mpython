@@ -102,13 +102,13 @@ function varargout = check_argout(varargin)
         % These MATLAB types are not supported in Python.
         
         % 1. Multidimensional char or cell arrays
-        if iscell(S)  & (numel(S) ~= length(S))
+        if iscell(S)
             s = struct();
             s.type__ = 'cell';
             s.size__ = size(S); 
             s.data__ = reshape(S, 1, []); 
 
-        elseif ischar(S)  & (numel(S) ~= length(S))
+        elseif ischar(S)
             s = struct();
             s.type__ = 'char';
             s.size__ = size(S); 
