@@ -4,7 +4,6 @@ function mpython_compile(ipath, opath, pkgname, toolboxes, includes)
     end
     pkgname = strrep(pkgname, '.', '_'); 
     pkgname = strrep(pkgname, '-', '_'); 
-    runtime_installer_name = 'RuntimeInstaller';
 
 
     if nargin < 4
