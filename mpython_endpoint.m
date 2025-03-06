@@ -159,8 +159,6 @@ function varargout = check_argout(varargin)
                 if isnumeric(s)
                     assert(~issparse(s)); 
                     assert(isscalar(s) || isreal(s));
-                else
-                    fprintf('%s\n', class(s));
                 end
         end
         % 5. categorical types
