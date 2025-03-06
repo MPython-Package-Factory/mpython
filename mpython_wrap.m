@@ -71,7 +71,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         end
     end
 
-    if istoplevel && ~exist(fullfile(opath, 'setup.py'), 'file')
+    if istoplevel && ~exist(fullfile(opath, '__wrapper__.py'), 'file')
         mpython_create_wrapper(opath);
     end
 
