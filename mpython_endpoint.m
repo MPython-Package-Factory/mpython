@@ -59,7 +59,7 @@ function varargout = check_argin(varargin)
             
             % 2. Sparse arrays
             elseif strcmp(S.type__, 'sparse')
-                s = sparse(S.data__); 
+                s = sparse(S.indices__(:,1), S.indices__(:,2), S.values__, S.size__(1), S.size__(2));
 
             % 3. struct arrays
             elseif strcmp(S.type__, 'structarray')
