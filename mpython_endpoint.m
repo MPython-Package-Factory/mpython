@@ -120,7 +120,12 @@ function varargout = check_argout(varargin)
 
         % 2. Sparse arrays
         elseif issparse(S)
-            s = struct('data__', full(S),  'type__', 'sparse'); 
+            s = struct(); 
+            [ii,jj,v] = find(S);
+            s.type__ = 'sparse';
+            s.size__ = size(S);
+            s.indices__ = [ii,jj];
+            s.values__ = v;
 
         % 3. struct arrays
         elseif (isstruct(S) & numel(S) > 1)
