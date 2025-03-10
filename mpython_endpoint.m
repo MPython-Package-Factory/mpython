@@ -93,6 +93,8 @@ function varargout = check_argin(varargin)
                     for f = fieldnames(s)'
                         try 
                             s.(f) = S.data__.(f);
+                        catch
+                            % ignore
                         end
                     end
                 end
