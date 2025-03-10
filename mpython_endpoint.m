@@ -55,14 +55,29 @@ function varargout = check_argin(varargin)
 
             % 1. Multidimensional char or cell arrays
             if strcmp(S.type__, 'cell')
+                if isempty(S.size__)
+                    S.size__ = [1, 0];
+                elseif isscalar(S.size__)
+                    S.size__ = [1, S.size__];
+                end
                 s = reshape(S.data__, S.size__);  
             
             % 2. Sparse arrays
             elseif strcmp(S.type__, 'sparse')
+                if isempty(S.size__)
+                    S.size__ = [1, 0];
+                elseif isscalar(S.size__)
+                    S.size__ = [1, S.size__];
+                end
                 s = sparse(S.indices__(:,1), S.indices__(:,2), S.values__, S.size__(1), S.size__(2));
 
             % 3. struct arrays
             elseif strcmp(S.type__, 'structarray')
+                if isempty(S.size__)
+                    S.size__ = [1, 0];
+                elseif isscalar(S.size__)
+                    S.size__ = [1, S.size__];
+                end
                 s = reshape([S.data__{:}], S.size__);
 
             % 3. struct arrays
