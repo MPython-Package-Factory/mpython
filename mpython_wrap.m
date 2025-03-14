@@ -165,6 +165,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
                 end
                 basename = strrep(basename, '-', '_');
                 basename = strrep(basename, '.', '_');
+                basename = mpython_mangle_builtin(basename);
 
                 [issame, hash, ignored] = mpython_check_hash(hashmap, basename, fullfile(path, file.name));
                 if ~issame || isclass
@@ -233,24 +234,8 @@ function [pystr, pyfname] = mpython_wrap_function(file, ismethod, pyfname)
     if nargin < 3
         pyfname = fun.fname;
     end
-
-    python_builtin = {
-        '__import__'; 'abs'; 'aiter'; 'all'; 'anext'; 'any'; 'ascii'; 
-        'as'; 'assert'; 'async'; 'await'; 'bin'; 'bool'; 'break'; 'breakpoint'; 
-        'bytes'; 'bytearray'; 'callable'; 'chr'; 'class'; 'classmethod'; 'compile'; 
-        'complex'; 'continue'; 'def'; 'del'; 'delattr'; 'dict'; 'dir'; 'divmod'; 
-        'elif'; 'else'; 'enumerate'; 'eval'; 'exec'; 'except'; 'filter'; 'finally'; 
-        'float'; 'for'; 'format'; 'frozenset'; 'from'; 'getattr'; 'global'; 'globals'; 
-        'hasattr'; 'hash'; 'help'; 'hex'; 'if'; 'import'; 'in'; 'input'; 'int'; 
-        'is'; 'isinstance'; 'issubclass'; 'iter'; 'lambda'; 'len'; 'list'; 'locals'; 
-        'map'; 'max'; 'memoryview'; 'min'; 'nonlocal'; 'next'; 'not'; 'object'; 'oct'; 
-        'open'; 'ord'; 'pass'; 'pow'; 'print'; 'property'; 'raise'; 'range'; 'repr'; 
-        'reversed'; 'return'; 'round'; 'set'; 'setattr'; 'slice'; 'sorted'; 'staticmethod'; 
-        'str'; 'sum'; 'super'; 'try'; 'tuple'; 'type'; 'vars'; 'while'; 'with'; 'yield'
-    };
-
-    if ~ismethod && any(strcmp(pyfname, python_builtin))
-        pyfname = sprintf('%s_', pyfname);
+    if ~ismethod
+        pyfname = mpython_mangle_builtin(pyfname);
     end
 
     % Check for output arguments
@@ -299,6 +284,27 @@ function [pystr, pyfname] = mpython_wrap_function(file, ismethod, pyfname)
             newline ...
             funsign
         ];
+    end
+end
+
+function name = mpython_mangle_builtin(name)
+    python_builtin = {
+        '__import__'; 'abs'; 'aiter'; 'all'; 'anext'; 'any'; 'ascii'; 
+        'as'; 'assert'; 'async'; 'await'; 'bin'; 'bool'; 'break'; 'breakpoint'; 
+        'bytes'; 'bytearray'; 'callable'; 'chr'; 'class'; 'classmethod'; 'compile'; 
+        'complex'; 'continue'; 'def'; 'del'; 'delattr'; 'dict'; 'dir'; 'divmod'; 
+        'elif'; 'else'; 'enumerate'; 'eval'; 'exec'; 'except'; 'filter'; 'finally'; 
+        'float'; 'for'; 'format'; 'frozenset'; 'from'; 'getattr'; 'global'; 'globals'; 
+        'hasattr'; 'hash'; 'help'; 'hex'; 'if'; 'import'; 'in'; 'input'; 'int'; 
+        'is'; 'isinstance'; 'issubclass'; 'iter'; 'lambda'; 'len'; 'list'; 'locals'; 
+        'map'; 'max'; 'memoryview'; 'min'; 'nonlocal'; 'next'; 'not'; 'object'; 'oct'; 
+        'open'; 'ord'; 'pass'; 'pow'; 'print'; 'property'; 'raise'; 'range'; 'repr'; 
+        'reversed'; 'return'; 'round'; 'set'; 'setattr'; 'slice'; 'sorted'; 'staticmethod'; 
+        'str'; 'sum'; 'super'; 'try'; 'tuple'; 'type'; 'vars'; 'while'; 'with'; 'yield'
+    };
+
+    if any(strcmp(name, python_builtin))
+        name = sprintf('%s_', name);
     end
 end
 
