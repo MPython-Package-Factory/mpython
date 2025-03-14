@@ -15,7 +15,27 @@ function [varargout] = mpython_endpoint(F, varargin)
     if strcmp(F, 'display') && nargout == 1 
         varargout{1} = evalc('display(varargin{:})'); 
     else
-        [varargout{:}] = feval(F, varargin{:}); 
+        try
+            [varargout{:}] = feval(F, varargin{:}); 
+        catch E
+            if nargout == 1
+                % Prepare to return None
+                varargout{1} = struct('type__', 'none');
+                switch E.identifier
+                    case {'MATLAB:TooManyOutputs'}
+                        % This error is raised before F is even evaluated
+                        % -> we need to rerun it without output
+                        feval(F, varargin{:});
+                    case {'MATLAB:unassignedOutputs'}
+                        % This error is raised after F is evaluated
+                        % -> no need to rerun it
+                    otherwise
+                        rethrow(E);
+                end
+            else
+                rethrow(E);
+            end
+        end
     end
 
     if nargout > 0
