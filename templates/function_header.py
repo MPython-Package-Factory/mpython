@@ -1,1 +1,1 @@
-from <pkgname>.__wrapper__ import Runtime
+from mpython import Runtime
