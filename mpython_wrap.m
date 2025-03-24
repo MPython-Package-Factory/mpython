@@ -217,9 +217,9 @@ function [fnstr, initstr, hashmap, allimports] = mpython_wrap(path, opath, dirna
             initstr = mpython_repl('init', 'imports', initstr); 
             initstr = [initstr newline newline '__all__ = [' newline];
             for i = 1:numel(allimports)
-                initstr = [initstr '    "' allimports{i}];
+                initstr = [initstr '    "' allimports{i} '"'];
                 if i < numel(allimports)
-                    initstr = [initstr '",'];
+                    initstr = [initstr ','];
                 end 
                 initstr = [initstr newline];
             end
