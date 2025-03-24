@@ -54,9 +54,7 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         fprintf('Wrapping %s... \n', PKGNAME); 
         
         initstr = [
-            'from mpython import Runtime,'
-            ' MatlabClass, MatlabFunction,' 
-            ' Cell, Struct, Array, SparseArray' newline];
+            'from mpython import Runtime, MatlabClass, MatlabFunction, Cell, Struct, Array, SparseArray' newline];
     else 
         initstr = []; 
     end
