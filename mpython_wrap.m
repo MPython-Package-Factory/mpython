@@ -147,13 +147,17 @@ function [fnstr, initstr, hashmap, allimports] = mpython_wrap(path, opath, dirna
                 elseif isprivate | strcmp(file.name, 'private')
                     hashmap = mpython_merge_hashmaps(hashmap, innerhashmap); 
                     initstr = [initstr initstr_pr]; 
-                    allimports = [allimports innerimports];
+                    allimports = [allimports innerimports{:}];
 
                 else
                     importname = strrep(file.name, '.', '_'); 
                     importname = strrep(importname, '-', '_'); 
                     initstr = [initstr 'from .' ['__' importname] ' import (' newline]; 
                     for i = 1:numel(innerimports)
+                        if innerimports{i}(1) == '_'
+                            continue
+                        end
+                        allimports = [allimports innerimports{i}];
                         initstr = [initstr '    ' innerimports{i}];
                         if i < numel(innerimports)
                             initstr = [initstr ','];
@@ -161,7 +165,6 @@ function [fnstr, initstr, hashmap, allimports] = mpython_wrap(path, opath, dirna
                         initstr = [initstr newline];
                     end
                     initstr = [initstr ')' newline];
-                    allimports = [allimports innerimports{:}];
                 end
             end
         else
@@ -204,7 +207,7 @@ function [fnstr, initstr, hashmap, allimports] = mpython_wrap(path, opath, dirna
                     end
                 end
                 
-                if ~isclass && ~ignored
+                if ~isclass && ~ignored && ~isprivate
                     initstr = [initstr 'from .' basename ' import ' pyfname newline]; 
                     allimports = [allimports pyfname];
                 end
