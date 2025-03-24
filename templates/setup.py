@@ -26,5 +26,8 @@ setup(
         'License :: OSI Approved :: GPL2', 
         'Operating System :: OS Independent',
     ],
-    python_requires='>=3.6',  
+    python_requires='>=3.6', 
+    install_requires=[
+        'mpython'
+    ] 
 )

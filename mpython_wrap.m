@@ -52,12 +52,9 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         end
 
         fprintf('Wrapping %s... \n', PKGNAME); 
-
-        % to do: check for differences in the mpython script
-        initstr = ['from .__wrapper__ import Struct, Cell, StructArray, Runtime' newline]; 
-    else
-        initstr = []; 
     end
+
+    initstr = []; 
 
     if ~isempty(regexp(path, ['.*?_' PKGNAME], 'match'))
         return 
@@ -69,10 +66,6 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         if ~exist(opath, 'dir')
             mkdir(opath)
         end
-    end
-
-    if istoplevel && ~exist(fullfile(opath, '__wrapper__.py'), 'file')
-        mpython_create_wrapper(opath);
     end
 
     % get hashmap
@@ -318,13 +311,6 @@ function pystr = mpython_wrap_class(classname, path)
     );
     
     pystr = class_header; 
-end
-
-
-function mpython_create_wrapper(path)
-    global TEMPLATES
-
-    writelines(TEMPLATES.wrapper, fullfile(path, '__wrapper__.py'))
 end
 
 function mpython_create_setup(path)
