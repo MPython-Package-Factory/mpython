@@ -152,7 +152,16 @@ function [fnstr, initstr, hashmap, allimports] = mpython_wrap(path, opath, dirna
                 else
                     importname = strrep(file.name, '.', '_'); 
                     importname = strrep(importname, '-', '_'); 
-                    initstr = [initstr 'from .' ['__' importname] ' import *' newline]; 
+                    initstr = [initstr 'from .' ['__' importname] ' import (' newline]; 
+                    for i = 1:numel(innerimports)
+                        initstr = [initstr '    ' innerimports{i}];
+                        if i < numel(innerimports)
+                            initstr = [initstr ','];
+                        end 
+                        initstr = [initstr newline];
+                    end
+                    initstr = [initstr ')' newline];
+                    allimports = [allimports innerimports{:}];
                 end
             end
         else
