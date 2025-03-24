@@ -440,7 +440,6 @@ function templates = mpython_load_templates(templatedir)
     global PKGNAME;
 
     files = {
-        'wrapper.py'
         'init.py'
         'class_header.py'
         'function_header.py'
