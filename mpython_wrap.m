@@ -52,9 +52,14 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         end
 
         fprintf('Wrapping %s... \n', PKGNAME); 
+        
+        initstr = [
+            "from mpython import Runtime,"
+            " MatlabClass, MatlabFunction," 
+            " Cell, Struct, Array, SparseArray" newline];
+    else 
+        initstr = []; 
     end
-
-    initstr = []; 
 
     if ~isempty(regexp(path, ['.*?_' PKGNAME], 'match'))
         return 
