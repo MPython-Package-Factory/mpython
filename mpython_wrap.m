@@ -1,4 +1,4 @@
-function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrite, templatedir, ispackage, istoplevel, isclass, isprivate, clsname)
+function [fnstr, initstr, hashmap, allimports] = mpython_wrap(path, opath, dirname, overwrite, templatedir, ispackage, istoplevel, isclass, isprivate, clsname)
     global PKGNAME; 
     if nargin < 4
         overwrite = false; 
@@ -52,11 +52,15 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         end
 
         fprintf('Wrapping %s... \n', PKGNAME); 
-
-        % to do: check for differences in the mpython script
-        initstr = ['from .__wrapper__ import Struct, Cell, StructArray, Runtime' newline]; 
-    else
+        
+        initstr = [
+            'from mpython import Runtime, MatlabClass, MatlabFunction, Cell, Struct, Array, SparseArray' newline];
+        allimports = {
+            'Runtime', 'MatlabClass', 'MatlabFunction', 'Cell', 'Struct', 'Array', 'SparseArray'
+        };
+    else 
         initstr = []; 
+        allimports = {};
     end
 
     if ~isempty(regexp(path, ['.*?_' PKGNAME], 'match'))
@@ -69,10 +73,6 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
         if ~exist(opath, 'dir')
             mkdir(opath)
         end
-    end
-
-    if istoplevel && ~exist(fullfile(opath, '__wrapper__.py'), 'file')
-        mpython_create_wrapper(opath);
     end
 
     % get hashmap
@@ -133,22 +133,38 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
                 end
 
                 initstr = [initstr 'from .' classname ' import ' classname newline]; 
+                allimports = [allimports classname];
                 
             elseif ~isempty(regexp(file.name, '^+', 'match'))
                 mpython_wrap(fullfile(path, file.name), opath, file.name, overwrite, templatedir, true, false, false, isprivate);
                 initstr = [initstr 'import .' file.name newline]; 
+                allimports = [allimports file.name];
 
             elseif isempty(regexp(fullfile(path, file.name), ['.*?_' PKGNAME], 'match'))
-                [~, initstr_pr, innerhashmap] = mpython_wrap(fullfile(path, file.name), opath, ['__' file.name], overwrite, templatedir, false, false, isclass, isprivate | strcmp(file.name, 'private'), clsname);
+                [~, initstr_pr, innerhashmap, innerimports] = mpython_wrap(fullfile(path, file.name), opath, ['__' file.name], overwrite, templatedir, false, false, isclass, isprivate | strcmp(file.name, 'private'), clsname);
                 if isempty(initstr_pr)
                     continue
                 elseif isprivate | strcmp(file.name, 'private')
                     hashmap = mpython_merge_hashmaps(hashmap, innerhashmap); 
                     initstr = [initstr initstr_pr]; 
+                    allimports = [allimports innerimports{:}];
+
                 else
                     importname = strrep(file.name, '.', '_'); 
                     importname = strrep(importname, '-', '_'); 
-                    initstr = [initstr 'from .' ['__' importname] ' import *' newline]; 
+                    initstr = [initstr 'from .' ['__' importname] ' import (' newline]; 
+                    for i = 1:numel(innerimports)
+                        if innerimports{i}(1) == '_'
+                            continue
+                        end
+                        allimports = [allimports innerimports{i}];
+                        initstr = [initstr '    ' innerimports{i}];
+                        if i < numel(innerimports)
+                            initstr = [initstr ','];
+                        end 
+                        initstr = [initstr newline];
+                    end
+                    initstr = [initstr ')' newline];
                 end
             end
         else
@@ -191,8 +207,9 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
                     end
                 end
                 
-                if ~isclass && ~ignored
+                if ~isclass && ~ignored && ~isprivate
                     initstr = [initstr 'from .' basename ' import ' pyfname newline]; 
+                    allimports = [allimports pyfname];
                 end
             end
         end
@@ -210,6 +227,15 @@ function [fnstr, initstr, hashmap] = mpython_wrap(path, opath, dirname, overwrit
 
         if ~isempty(initstr) 
             initstr = mpython_repl('init', 'imports', initstr); 
+            initstr = [initstr newline newline '__all__ = [' newline];
+            for i = 1:numel(allimports)
+                initstr = [initstr '    "' allimports{i} '"'];
+                if i < numel(allimports)
+                    initstr = [initstr ','];
+                end 
+                initstr = [initstr newline];
+            end
+            initstr = [initstr ']' newline];
             writelines(initstr, fullfile(opath, '__init__.py'));
         end
     end    
@@ -318,13 +344,6 @@ function pystr = mpython_wrap_class(classname, path)
     );
     
     pystr = class_header; 
-end
-
-
-function mpython_create_wrapper(path)
-    global TEMPLATES
-
-    writelines(TEMPLATES.wrapper, fullfile(path, '__wrapper__.py'))
 end
 
 function mpython_create_setup(path)
@@ -454,7 +473,6 @@ function templates = mpython_load_templates(templatedir)
     global PKGNAME;
 
     files = {
-        'wrapper.py'
         'init.py'
         'class_header.py'
         'function_header.py'
