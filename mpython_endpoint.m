@@ -89,7 +89,7 @@ function varargout = check_argin(varargin)
                 elseif isscalar(S.size__)
                     S.size__ = [1, S.size__];
                 end
-                s = reshape(S.data__, S.size__);
+                s = reshape(char(string(S.data__)), S.size__);
 
             % 2. Sparse arrays
             elseif strcmp(S.type__, 'sparse')
