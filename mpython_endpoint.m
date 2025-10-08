@@ -73,7 +73,7 @@ function varargout = check_argin(varargin)
         % These MATLAB types are not supported in Python.
         if isstruct(S) & isfield(S, 'type__') 
 
-            % 1. Multidimensional char or cell arrays
+            % 1.a Multidimensional cell arrays
             if strcmp(S.type__, 'cell')
                 if isempty(S.size__)
                     S.size__ = [1, 0];
@@ -81,7 +81,16 @@ function varargout = check_argin(varargin)
                     S.size__ = [1, S.size__];
                 end
                 s = reshape(S.data__, S.size__);  
-            
+
+            % 1.b Multidimensional char arrays
+            elseif strcmp(S.type__, 'char')
+                if isempty(S.size__)
+                    S.size__ = [1, 0];
+                elseif isscalar(S.size__)
+                    S.size__ = [1, S.size__];
+                end
+                s = reshape(S.data__, S.size__);
+
             % 2. Sparse arrays
             elseif strcmp(S.type__, 'sparse')
                 if isempty(S.size__)
@@ -118,7 +127,23 @@ function varargout = check_argin(varargin)
                         end
                     end
                 end
+
+            % 5. Unknown type
+            else
+                try
+                    s = feval(S.type__, S.data__); 
+                catch
+                    error('Unknown type %s', S.type__);
+                end
+                if isfield(S, 'size__')
+                    try 
+                        s = reshape(s, S.size__); 
+                    catch
+                        error('Cannot reshape to size %s', mat2str(S.size__));
+                    end
+                end
             end
+            
         elseif isnumeric(S)
             s = double(S); 
         else
