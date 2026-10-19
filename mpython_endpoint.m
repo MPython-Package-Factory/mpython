@@ -133,8 +133,6 @@ function varargout = check_argin(varargin)
                 end
             end
 
-        elseif isnumeric(S)
-            s = double(S);
         else
             s = S;
         end
