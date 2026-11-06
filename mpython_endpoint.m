@@ -71,7 +71,7 @@ function varargout = check_argin(varargin)
 
         % Convert to unsupported MATLAB Types
         % These MATLAB types are not supported in Python.
-        if isstruct(S) & isfield(S, 'type__')
+        if isstruct(S) && isfield(S, 'type__')
 
             % 1.a Multidimensional cell arrays
             if strcmp(S.type__, 'cell')
@@ -238,10 +238,13 @@ function varargout = check_argout(varargin)
                 s{j} = check_argout(s{j});
             end
         elseif isstruct(s)
-            fn = fieldnames(s);
-            for j = 1:numel(fn)
-                o = check_argout(s.(fn{j}));
-                s.(fn{j}) = o;
+            if ~isfield(s, 'type__') or ~strcmp(s.type__, "emptynum")
+                % skip empty arrays to avoid recursions
+                fn = fieldnames(s);
+                for j = 1:numel(fn)
+                    o = check_argout(s.(fn{j}));
+                    s.(fn{j}) = o;
+                end
             end
         end
 
