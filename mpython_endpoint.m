@@ -238,7 +238,7 @@ function varargout = check_argout(varargin)
                 s{j} = check_argout(s{j});
             end
         elseif isstruct(s)
-            if ~isfield(s, 'type__') or ~strcmp(s.type__, "emptynum")
+            if ~(isfield(s, 'type__') && ~strcmp(s.type__, "emptynum"))
                 % skip empty arrays to avoid recursions
                 fn = fieldnames(s);
                 for j = 1:numel(fn)
