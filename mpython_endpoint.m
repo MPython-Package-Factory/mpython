@@ -109,7 +109,7 @@ function varargout = check_argin(varargin)
                 end
                 s = reshape([S.data__{:}], S.size__);
 
-            % 3. struct arrays
+            % 3.b empty struct arrays
             elseif strcmp(S.type__, 'emptystruct')
                 s = struct([]);
 
@@ -117,7 +117,11 @@ function varargout = check_argin(varargin)
             elseif strcmp(S.type__, 'object')
                 s = getArrayFromByteStream(S.data__);
 
-            % 5. Unknown type
+            % 5. empty numeric arrays (must be caught on R2026b)
+            elseif strcmp(S.type__, 'emptynum')
+                s = zeros(S.size__, S.class__);
+
+            % 6. Unknown type
             else
                 try
                     s = feval(S.type__, S.data__);
@@ -154,13 +158,13 @@ function varargout = check_argout(varargin)
         %
         %    Check for non-column cell arrays, escape infinite recursion
         % after conversion to shape (1,n)
-        if iscell(S) & (numel(S) ~= size(S,2))
+        if iscell(S) && (numel(S) ~= size(S,2))
             s = struct();
             s.type__ = 'cell';
             s.size__ = size(S);
             s.data__ = reshape(S, 1, []);
 
-        elseif ischar(S)  & (numel(S) ~= length(S))
+        elseif ischar(S) && (numel(S) ~= length(S))
             s = struct();
             s.type__ = 'char';
             s.size__ = size(S);
@@ -177,7 +181,7 @@ function varargout = check_argout(varargin)
             s.values__ = v;
 
         % 3. struct arrays
-        elseif (isstruct(S) & numel(S) > 1)
+        elseif (isstruct(S) && numel(S) > 1)
             s = struct();
             s.type__ = 'structarray';
             s.size__ = size(S);
@@ -185,7 +189,7 @@ function varargout = check_argout(varargin)
                 arrayfun(@(o) o, S, 'UniformOutput', false), 1, []);
 
         % 3. struct arrays
-        elseif (isstruct(S) & numel(S) == 0)
+        elseif (isstruct(S) && numel(S) == 0)
             s = struct;
             s.type__ = 'emptystruct';
 
@@ -195,6 +199,14 @@ function varargout = check_argout(varargin)
             s.type__ = 'object';
             s.class__ = class(S);
             s.data__ = getByteStreamFromArray(S);
+
+        % 5. empty numeric arrays (must be caught on R2026b)
+        elseif isnumeric(S) && numel(S) == 0
+            s = struct();
+            s.type__ = 'emptynum';
+            s.size__ = size(S);
+            s.class__ = class(S);
+
         else
             s = S;
         end
@@ -217,16 +229,14 @@ function varargout = check_argout(varargin)
                     assert(isscalar(s) || isreal(s));
                 end
         end
-        % 5. categorical types
-        % 6. containers.Map types
-        % 7. matlab.metadata.Class (py.class)
+        % 6. categorical types
+        % 7. containers.Map types
+        % 8. matlab.metadata.Class (py.class)
 
         % dive in
         if iscell(s)
             for j = 1:numel(s)
-                if ~isempty(s{j})
-                    s{j} = check_argout(s{j});
-                end
+                s{j} = check_argout(s{j});
             end
         elseif isstruct(s)
             fn = fieldnames(s);
