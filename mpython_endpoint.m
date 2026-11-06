@@ -119,7 +119,7 @@ function varargout = check_argin(varargin)
 
             % 5. empty numeric arrays (must be caught on R2026b)
             elseif strcmp(S.type__, 'emptynum')
-                s = zeros(S.size__, S.class__);
+                s = S.data__;
 
             % 6. Unknown type
             else
@@ -204,8 +204,7 @@ function varargout = check_argout(varargin)
         elseif isnumeric(S) && numel(S) == 0
             s = struct();
             s.type__ = 'emptynum';
-            s.size__ = size(S);
-            s.class__ = class(S);
+            s.data__ = S;
 
         else
             s = S;
